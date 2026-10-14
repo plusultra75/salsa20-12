@@ -1,5 +1,4 @@
-#include <stdio.h>
-#include <stdint.h>
+#include "salsa20.h"
 // Ham xoay trai mot so nguyen 32 bit n vi tri
 uint32_t rotl32(uint32_t x,unsigned int n){
     n=n%32;// Dua so vi tri xoay ve khoang 0 den 31
