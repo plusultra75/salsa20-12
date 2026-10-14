@@ -1,0 +1,7 @@
+# Bỏ qua thư mục cấu hình VS Code
+.vscode/
+# Bỏ qua các file sau khi biên dịch
+*.exe
+*.o
+# Bỏ qua file tạm của Code Runner
+tempCodeRunnerFile.c
