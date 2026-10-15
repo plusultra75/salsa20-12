@@ -1,3 +1,5 @@
+*.o
+*.exe
 # Bỏ qua thư mục cấu hình VS Code
 .vscode/
 # Bỏ qua các file sau khi biên dịch
