@@ -5,7 +5,7 @@ void doubleround(uint32_t state[16]) {
     rowround(state);
 }
 
-void salsa20_12_block(const uint32_t state[16], uint8_t keystream[64]) {
+void salsa20_12_block(const uint32_t state[restrict 16], uint8_t keystream[restrict 64]) {
     uint32_t working_state[16];
     int i;
 
