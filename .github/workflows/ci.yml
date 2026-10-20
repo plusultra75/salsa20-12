@@ -1,4 +1,3 @@
-
 name: Salsa20-12 CI
 
 on:
@@ -15,17 +14,10 @@ jobs:
   unit-tests:
     name: Test ${{ matrix.module }}
     runs-on: ubuntu-latest
-
     strategy:
       fail-fast: false
       matrix:
-        module:
-          - quarterround
-          - rowround
-          - columnround
-          - core
-          - state
-          - cipher
+        module: [quarterround, rowround, columnround, core, state, cipher]
 
     steps:
       - name: Get source code
@@ -43,65 +35,55 @@ jobs:
 
             for file in "$test_file" "$@"; do
               if [ ! -f "$file" ]; then
-                echo "::warning::$label NOT TESTED: missing $file"
-                echo "- NOT TESTED: $label (missing $file)" >> "$GITHUB_STEP_SUMMARY"
-                return 0
+                echo "::error::$label: missing $file"
+                echo "- FAILED: $label (missing $file)" >> "$GITHUB_STEP_SUMMARY"
+                return 1
               fi
             done
 
-            gcc -std=c11 -Wall -Wextra -Wpedantic -Werror \
-              -Iinclude "$@" "$test_file" -o unit_test
+            if [ "$test_file" = "tests/test_columnround.c" ]; then
+              gcc -std=c11 -Wall -Wextra -Wpedantic -Werror -DUSE_MEMBER1 \
+                -Iinclude "$@" "$test_file" -o unit_test
+            else
+              gcc -std=c11 -Wall -Wextra -Wpedantic -Werror \
+                -Iinclude "$@" "$test_file" -o unit_test
+            fi
 
             ./unit_test
             echo "- PASSED: $label" >> "$GITHUB_STEP_SUMMARY"
           }
 
           case "${{ matrix.module }}" in
-
             quarterround)
               run_test "Member 1 - Quarter Round" \
                 test/test_quarterround.c \
                 src/quarterround.c
               ;;
-
             rowround)
               run_test "Member 2 - Row Round" \
                 test/test_rowround.c \
                 src/quarterround.c src/rowround.c
               ;;
-
             columnround)
               run_test "Member 3 - Column Round" \
-                test/test_columnround.c \
+                tests/test_columnround.c \
                 src/quarterround.c src/columnround.c
               ;;
-
             core)
               run_test "Member 4 - Core" \
-                test/test_core.c \
-                src/quarterround.c src/rowround.c \
-                src/columnround.c src/doubleround.c src/core.c
+                tests/test_core.c \
+                src/quarterround.c src/rowround.c src/columnround.c \
+                src/core.c src/state.c
               ;;
-
             state)
-              for test_file in \
-                tests/test_state.c \
-                tests/test_spec.c \
-                tests/test_edge.c
-              do
-                run_test "Member 5 - $test_file" \
-                  "$test_file" src/state.c
+              for test_file in tests/test_state.c tests/test_spec.c tests/test_edge.c; do
+                run_test "Member 5 - $test_file" "$test_file" src/state.c
               done
               ;;
-
             cipher)
-              if [ -f src/core.c ] && [ -f src/cipher.c ]; then
-                run_test "Member 6 - Cipher" \
-                  tests/test_cipher.c src/*.c
-              else
-                echo "::warning::Cipher NOT TESTED: waiting for Core"
-                echo "- NOT TESTED: Cipher (waiting for Core)" \
-                  >> "$GITHUB_STEP_SUMMARY"
-              fi
+              run_test "Member 6 - Cipher" \
+                tests/test_cipher.c \
+                src/quarterround.c src/rowround.c src/columnround.c \
+                src/core.c src/state.c src/cipher.c
               ;;
           esac
