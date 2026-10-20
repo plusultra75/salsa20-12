@@ -39,7 +39,6 @@ int main(void)
     puts("PASS 4: decrypt recovers ABC");
 
     // Keystream counter 0 kiem tra 64 byte dau.
-    // dung cho test 56
     uint32_t state[16];
     uint8_t block0[64];
     salsa20_init_state(state, key, nonce, 0);
@@ -95,6 +94,59 @@ int main(void)
     assert(output65[65] == 0xA5);
     puts("PASS 7: 65 bytes");
 
-    
+    // Test 8: 128 byte
+    uint8_t input128[128];
+    uint8_t output128[129] = {0};
+    for (int i = 0; i < 128; i++) {
+        input128[i] = (uint8_t) i;
+    }
+    output128[128] = 0xA5;
+
+    salsa20_12_crypt(input128, output128, 128, key, nonce);
+    for (int i = 0; i < 64; i++) {
+        assert(output128[i] == (input128[i] ^ block0[i]));
+    }
+    for (int i = 0; i < 64; i++) {
+        assert(output128[64 + i] == (input128[64 + i] ^ block1[i]));
+    }
+    assert(output128[128] == 0xA5);
+    puts("PASS 8: 128 bytes");
+
+    // Test 9: 130 byte
+    uint8_t block2[64];
+    salsa20_init_state(state, key, nonce, 2);
+    salsa20_12_block(state, block2);
+
+    uint8_t input130[130];
+    uint8_t output130[131] = {0};
+    for (int i = 0; i < 130; i++) {
+        input130[i] = (uint8_t) i;
+    }
+    output130[130] = 0xA5;
+
+    salsa20_12_crypt(input130, output130, 130, key, nonce);
+    for (int i = 0; i < 64; i++) {
+        assert(output130[i] == (input130[i] ^ block0[i]));
+    }
+    for (int i = 0; i < 64; i++) {
+        assert(output130[64 + i] == (input130[64 + i] ^ block1[i]));
+    }
+    for (int i = 0; i < 2; i++) {
+        assert(output130[128 + i] == (input130[128 + i] ^ block2[i]));
+    }
+    assert(output130[130] == 0xA5);
+    puts("PASS 9: 130 bytes, counters 0, 1, 2");
+
+    // Test 10: giai ma 130 byte o test 9.
+    uint8_t recovered130[131] = {0};
+    recovered130[130] = 0xA5;
+
+    salsa20_12_crypt(output130, recovered130, 130, key, nonce);
+    for (int i = 0; i < 130; i++) {
+        assert(recovered130[i] == input130[i]);
+    }
+    assert(recovered130[130] == 0xA5);
+    puts("PASS 10: decrypt recovers 130 bytes");
+
     return 0;
 }
