@@ -56,12 +56,12 @@ jobs:
           case "${{ matrix.module }}" in
             quarterround)
               run_test "Member 1 - Quarter Round" \
-                test/test_quarterround.c \
+                tests/test_quarterround.c \
                 src/quarterround.c
               ;;
             rowround)
               run_test "Member 2 - Row Round" \
-                test/test_rowround.c \
+                tests/test_rowround.c \
                 src/quarterround.c src/rowround.c
               ;;
             columnround)
