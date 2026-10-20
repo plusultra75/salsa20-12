@@ -2,12 +2,6 @@
 #include <stdio.h>
 #include "salsa20.h"
 
-/* Test co ban cho length = 0, 1, 3; chua kiem tra ranh gioi 64 byte.
- * Nettle Salsa20/12, khoa 256 bit 80 00 ... 00, nonce 00 ... 00:
- * keystream bat dau AF E4 11, nen ASCII "ABC" XOR cho EE A6 52.
- * Nguon: https://sources.debian.org/src/nettle/3.8.1-2/testsuite/salsa20-test.c/
- * Dap an khong lay tu output cua cipher.c.
- */
 int main(void)
 {
     const uint8_t key[32] = {0x80};
@@ -44,6 +38,63 @@ int main(void)
     assert(recovered[2] == input[2]);
     puts("PASS 4: decrypt recovers ABC");
 
-    puts("Cipher tests: passed");
+    // Keystream counter 0 kiem tra 64 byte dau.
+    // dung cho test 56
+    uint32_t state[16];
+    uint8_t block0[64];
+    salsa20_init_state(state, key, nonce, 0);
+    salsa20_12_block(state, block0);
+
+    // Test 5: 63 byte
+    uint8_t input63[63];
+    uint8_t output63[64] = {0};
+    for (int i = 0; i < 63; i++) {
+        input63[i] = (uint8_t) i;
+    }
+    output63[63] = 0xA5;
+
+    salsa20_12_crypt(input63, output63, 63, key, nonce);
+    for (int i = 0; i < 63; i++) {
+        assert(output63[i] == (input63[i] ^ block0[i]));
+    }
+    assert(output63[63] == 0xA5);
+    puts("PASS 5: 63 bytes");
+
+    // Test 6: 64 byte, vua du mot khoi.
+    uint8_t input64[64];
+    uint8_t output64[65] = {0};
+    for (int i = 0; i < 64; i++) {
+        input64[i] = (uint8_t) i;
+    }
+    output64[64] = 0xA5;
+
+    salsa20_12_crypt(input64, output64, 64, key, nonce);
+    for (int i = 0; i < 64; i++) {
+        assert(output64[i] == (input64[i] ^ block0[i]));
+    }
+    assert(output64[64] == 0xA5);
+    puts("PASS 6: 64 bytes");
+
+    // Test 7: 65 byte
+    uint8_t block1[64];
+    salsa20_init_state(state, key, nonce, 1);
+    salsa20_12_block(state, block1);
+
+    uint8_t input65[65];
+    uint8_t output65[66] = {0};
+    for (int i = 0; i < 65; i++) {
+        input65[i] = (uint8_t) i;
+    }
+    output65[65] = 0xA5;
+
+    salsa20_12_crypt(input65, output65, 65, key, nonce);
+    for (int i = 0; i < 64; i++) {
+        assert(output65[i] == (input65[i] ^ block0[i]));
+    }
+    assert(output65[64] == (input65[64] ^ block1[0]));
+    assert(output65[65] == 0xA5);
+    puts("PASS 7: 65 bytes");
+
+    
     return 0;
 }
