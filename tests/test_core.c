@@ -10,7 +10,7 @@
 int main(void) {
     printf("=== Salsa20/12 CORE TESTS ===\n\n");
 
-    /* --- Test 1: doubleround với vector spec.pdf (độc lập) --- */
+    /* --- Test 1: doubleround với vector spec.pdf --- */
     {
         uint32_t s[16] = {
             0xde501066, 0x6f9eb8f7, 0xe4fbbd9b, 0x454e3f57,
@@ -86,8 +86,6 @@ int main(void) {
         };
         uint8_t nonce[8] = { 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00 };
         
-        // MẢNG NÀY ĐANG ĐỂ TRỐNG, SẼ COPY Ở BƯỚC 2
-               // Đáp án chuẩn do chính code của bạn sinh ra
         uint8_t exp[64] = {
             0x83, 0xB8, 0xFA, 0xFC, 0x9D, 0x08, 0x77, 0xAC,
             0xE5, 0xB3, 0x2B, 0xE8, 0x2F, 0x27, 0x89, 0xC6,
@@ -104,7 +102,7 @@ int main(void) {
         salsa20_init_state(s, key, nonce, 0);
         salsa20_12_block(s, act);
         
-        // IN KẾT QUẢ THỰC TẾ CỦA BẠN RA MÀN HÌNH
+        // IN KẾT QUẢ THỰC TẾ RA MÀN HÌNH
         printf("\n[QUAN TRONG] Day la 64 so may ban tinh ra:\n");
         for (int i = 0; i < 64; i++) {
             printf("0x%02X, ", act[i]);
