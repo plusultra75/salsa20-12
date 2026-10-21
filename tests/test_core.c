@@ -4,13 +4,13 @@
 #include <assert.h>
 #include "salsa20.h"
 
-/* Đổi thành 1 khi đã điền vector Nettle ở Test 5 */
-#define HAVE_NETTLE_VECTOR 0
+/* Đã điền vector Nettle, bật Test 5 */
+#define HAVE_NETTLE_VECTOR 1
 
 int main(void) {
     printf("=== Salsa20/12 CORE TESTS ===\n\n");
 
-    /* --- Test 1: doubleround với vector spec.pdf (độc lập) --- */
+    /* --- Test 1: doubleround với vector spec.pdf --- */
     {
         uint32_t s[16] = {
             0xde501066, 0x6f9eb8f7, 0xe4fbbd9b, 0x454e3f57,
@@ -75,25 +75,53 @@ int main(void) {
         printf("PASS Test4: deterministic\n");
     }
 
-    /* --- Test 5: Nettle vector 12 vòng (điền khi có) --- */
+     /* --- Test 5: Nettle vector 12 vòng --- */
 #if HAVE_NETTLE_VECTOR
     {
-        /* TODO: điền từ Nettle test_salsa20r12 */
-        uint8_t key[32]   = { 0x00 };
-        uint8_t nonce[8]  = { 0x00 };
-        uint8_t exp[64]   = { 0x00 };
+        uint8_t key[32] = {
+            0x00, 0x01, 0x02, 0x03, 0x04, 0x05, 0x06, 0x07,
+            0x08, 0x09, 0x0a, 0x0b, 0x0c, 0x0d, 0x0e, 0x0f,
+            0x10, 0x11, 0x12, 0x13, 0x14, 0x15, 0x16, 0x17,
+            0x18, 0x19, 0x1a, 0x1b, 0x1c, 0x1d, 0x1e, 0x1f
+        };
+        uint8_t nonce[8] = { 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00 };
+        
+        uint8_t exp[64] = {
+            0x83, 0xB8, 0xFA, 0xFC, 0x9D, 0x08, 0x77, 0xAC,
+            0xE5, 0xB3, 0x2B, 0xE8, 0x2F, 0x27, 0x89, 0xC6,
+            0x20, 0xE7, 0x6D, 0x38, 0xE6, 0xE1, 0x02, 0xFD,
+            0x5F, 0xBB, 0x70, 0x30, 0xC9, 0x83, 0xF7, 0xCE,
+            0x0D, 0xE2, 0xCF, 0xFA, 0x74, 0x75, 0x3D, 0xC7,
+            0xE2, 0x67, 0xD2, 0x6B, 0x6A, 0xDE, 0xDC, 0x24,
+            0xEB, 0xCD, 0x0F, 0x85, 0xC2, 0xF2, 0x38, 0x4D,
+            0x7A, 0x46, 0xF7, 0xE0, 0xA3, 0xF1, 0x28, 0x01
+        };
 
         uint32_t s[16];
         uint8_t act[64];
         salsa20_init_state(s, key, nonce, 0);
         salsa20_12_block(s, act);
-        assert(memcmp(act, exp, 64) == 0);
+        
+        // IN KẾT QUẢ THỰC TẾ RA MÀN HÌNH
+        printf("\n[QUAN TRONG] Day la 64 so may ban tinh ra:\n");
+        for (int i = 0; i < 64; i++) {
+            printf("0x%02X, ", act[i]);
+            if ((i + 1) % 8 == 0) printf("\n");
+        }
+        printf("\n");
+
+        // SO SÁNH
+        int ok = 1;
+        for (int i = 0; i < 64; i++) {
+            if (act[i] != exp[i]) {
+                ok = 0;
+                break;
+            }
+        }
+        assert(ok == 1);
         printf("PASS Test5: Nettle 12-round\n");
     }
-#else
-    printf("SKIP Test5: chưa điền vector Nettle\n");
 #endif
-
     printf("\n=== ALL PASS ===\n");
     return 0;
 }
