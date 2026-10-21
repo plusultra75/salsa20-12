@@ -19,10 +19,11 @@ void salsa20_12_block(const uint32_t state[restrict 16], uint8_t keystream[restr
     for (i = 0; i < 16; i++) working_state[i] += state[i];
 
     /* Bước 4: xuất 64 byte little-endian */
+    uint8_t *out = keystream;
     for (i = 0; i < 16; i++) {
-        keystream[4*i + 0] = (uint8_t)( working_state[i]        & 0xFF);
-        keystream[4*i + 1] = (uint8_t)((working_state[i] >>  8) & 0xFF);
-        keystream[4*i + 2] = (uint8_t)((working_state[i] >> 16) & 0xFF);
-        keystream[4*i + 3] = (uint8_t)((working_state[i] >> 24) & 0xFF);
+        *out++ = (uint8_t)( working_state[i]        & 0xFF);
+        *out++ = (uint8_t)((working_state[i] >>  8) & 0xFF);
+        *out++ = (uint8_t)((working_state[i] >> 16) & 0xFF);
+        *out++ = (uint8_t)((working_state[i] >> 24) & 0xFF);
     }
 }
